@@ -1,0 +1,2 @@
+rootProject.name = 'jni-sample'
+include('sample-java', 'sample-scala', 'jnilib')

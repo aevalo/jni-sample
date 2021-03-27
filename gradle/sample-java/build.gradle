@@ -1,0 +1,27 @@
+plugins {
+  id 'application'
+}
+
+repositories {
+  jcenter()
+}
+
+dependencies {
+  implementation 'org.scijava:native-lib-loader:2.3.5'
+  // Use TestNG framework, also requires calling test.useTestNG() below
+  testImplementation 'org.testng:testng:7.3.0'
+}
+
+application {
+  mainClass = 'Sample1'
+}
+
+tasks.named('test') {
+  dependsOn ':jnilib:build'
+  useTestNG()
+}
+
+tasks.withType(Test) {
+  println(project(':jnilib').buildDir)
+  systemProperty 'java.library.path', "${project(':jnilib').buildDir}/lib/main/debug/linux"
+}
