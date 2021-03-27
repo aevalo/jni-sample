@@ -7,10 +7,10 @@ class Sample1 {
 }
 
 object Sample1 {
+  System.loadLibrary("Sample1")
 
   // --- Main method to test our native library
   def main(args: Array[String]): Unit = {
-    System.loadLibrary("Sample1")
     val sample = new Sample1
     val square = sample.intMethod(5)
     val bool = sample.booleanMethod(true)

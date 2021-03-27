@@ -1,5 +1,8 @@
 
 public class Sample1 {
+    static {
+      System.loadLibrary("Sample1");
+    }
 
     // --- Native methods
     public native int intMethod(int n);
@@ -10,7 +13,6 @@ public class Sample1 {
 
     // --- Main method to test our native library
     public static void main(String[] args) {
-        System.loadLibrary("Sample1");
         Sample1 sample = new Sample1();
         int square = sample.intMethod(5);
         boolean bool = sample.booleanMethod(true);

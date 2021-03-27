@@ -1,5 +1,3 @@
-SCALA_LIBS_HOME = $(HOME)/.sdkman/candidates/scala/current/lib
-SCALA_CP = $(SCALA_LIBS_HOME)/scala-library.jar
 CC = g++
 CFLAGS = -Wall -Werror -fpic -I./out/generated/header -I$(JAVA_HOME)/include  -I$(JAVA_HOME)/include/linux
 
@@ -23,7 +21,7 @@ Sample1.scala: out-dir
 
 Sample1.scala.h: Sample1.scala
 	@echo "Creating JNI header from Scala class"
-	@javah -cp $(SCALA_CP):./out/classes/scala -d ./out/generated/header Sample1
+	@javah -cp ./out/classes/scala -d ./out/generated/header Sample1
 
 Sample1.o:
 	@echo "Compiling JNI module"
