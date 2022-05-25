@@ -1,3 +1,10 @@
+# VS Code
+.vscode/
+.metals/
+
+# IntelliJ
+.idea/
+
 .gradle
 /build/
 
@@ -12,3 +19,8 @@ gradle-app.setting
 
 # # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
 # gradle/wrapper/gradle-wrapper.properties
+
+# Not sure what generates these, but should be ignored
+gradle/sample-java/bin/
+gradle/sample-scala/bin/
+

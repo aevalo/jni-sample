@@ -1,6 +1,15 @@
+import org.scijava.nativelib.NativeLoader;
+import java.io.IOException;
+
+
 public class Sample1 {
   static {
-    System.loadLibrary("Sample1");
+    try {
+      NativeLoader.loadLibrary("Sample1");
+    }
+    catch(IOException exception ) {
+      System.err.printf("Failed to load native library: %s%n", exception);
+    }
   }
 
   // --- Native methods

@@ -1,3 +1,6 @@
+import org.scijava.nativelib.NativeLoader
+import java.io.IOException
+
 class Sample1 {
   // --- Native methods
   @native def intMethod(n: Int): Int
@@ -7,7 +10,12 @@ class Sample1 {
 }
 
 object Sample1 {
-  System.loadLibrary("Sample1")
+  try {
+    NativeLoader.loadLibrary("Sample1");
+  }
+  catch {
+    case exception: IOException => System.err.printf("Failed to load native library: %s%n", exception)
+  }
 
   // --- Main method to test our native library
   def main(args: Array[String]): Unit = {

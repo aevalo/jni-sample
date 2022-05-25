@@ -2,6 +2,7 @@ plugins {
   id 'cpp-library'
 }
 
+version = '0.1'
 library {
   baseName = 'Sample1'
   targetMachines = [
@@ -11,7 +12,6 @@ library {
   ]
   linkage = [Linkage.SHARED]
 }
-
 
 tasks.withType(CppCompile).configureEach {
   compilerArgs.add '-fPIC'
