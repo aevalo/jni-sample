@@ -17,13 +17,51 @@ application {
   mainClass = 'Sample1'
 }
 
+task copyNativeLibs(type: Copy) {
+  dependsOn ':jnilib:build'
+  dependsOn ':jnilib:assemble'
+  dependsOn ':jnilib:stripSymbolsReleaseLinux'
+  dependsOn ':jnilib:linkDebugLinux'
+  dependsOn ':jnilib:linkReleaseLinux'
+  mustRunAfter ':jnilib:linkDebugLinux'
+  mustRunAfter ':jnilib:linkReleaseLinux'
+  duplicatesStrategy 'exclude'
+  def toDir = "build/${getPlatformLibraryPath()}"
+  file("build/${getPlatformLibraryPath()}").mkdirs()
+  from(tasks.getByPath(':jnilib:linkReleaseLinux').outputs) {
+    into getPlatformLibraryPath()
+  }
+  into 'build'
+  from(tasks.getByPath(':jnilib:linkDebugLinux').outputs) {
+    into 'natives/linkDebug'
+  }
+  from(tasks.getByPath(':jnilib:assembleDebugLinux').outputs) {
+    into 'natives/assembleDebug'
+  }
+  from(tasks.getByPath(':jnilib:linkReleaseLinux').outputs) {
+    into 'natives/linkRelease'
+  }
+  from(tasks.getByPath(':jnilib:stripSymbolsReleaseLinux').outputs) {
+    into 'natives/stripRelease'
+  }
+  from(tasks.getByPath(':jnilib:assembleReleaseLinux').outputs) {
+    into 'natives/assembleRelease'
+  }
+}
+
 jar {
   dependsOn ':jnilib:build'
-  def toDir = "/natives/${getArchitecture().getArchitectureId()}"
-
-  from("${project(':jnilib').buildDir}/lib/main/debug/linux") {
-    include '*.so'
-  } into toDir
+  from(tasks.getByPath(':jnilib:linkReleaseLinux').outputs) {
+    duplicatesStrategy 'exclude'
+    // include '*.so'
+    into getPlatformLibraryPath()
+  }
+  //from ':jnilib:compileDebugLinuxCpp.outputs' into 'debugSomeOtherFolder'
+  //from ':jnilib:assembleReleaseLinux.outputs' into 'releaseSomeFolder'
+  //from ':jnilib:compileReleaseLinuxCpp.outputs' into 'releaseSomeOtherFolder'
+  //from(tasks.getByPath(':jnilib:build').outputs) {
+  //  into 'buildSomeFolder'
+  //}
   manifest {
     attributes (
       'Main-Class': 'Sample1'
@@ -31,9 +69,22 @@ jar {
   }
 }
 
-tasks.named('test') {
+jar.dependsOn copyNativeLibs
+
+test {
   dependsOn ':jnilib:build'
+  systemProperty 'java.library.path', "${project(':jnilib').buildDir}/lib/main/debug/linux"
   useTestNG()
+}
+
+run {
+  dependsOn ':jnilib:build'
+  systemProperty 'java.library.path', "${project(':jnilib').buildDir}/lib/main/debug/linux"
+}
+
+def getPlatformLibraryPath() {
+  def DELIM = '/';
+  "natives/${getArchitecture().getArchitectureId()}"
 }
 
 enum ProcessorEnum {
@@ -168,8 +219,4 @@ def getArchitecture() {
     }
   }
   return architecture;
-}
-
-tasks.withType(Test) {
-  systemProperty 'java.library.path', "${project(':jnilib').buildDir}/lib/main/debug/linux"
 }

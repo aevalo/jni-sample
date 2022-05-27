@@ -25,16 +25,20 @@ application {
   mainClass = 'Sample1'
 }
 
-task copyNativeLibsToJar (type: Copy) {
+task copyNativeLibs(type: Copy) {
+  dependsOn ':jnilib:build'
+  def toDir = "build/${getPlatformLibraryPath()}"
+  file(toDir).mkdirs()
+  from(fileTree(dir: "${project(':jnilib').buildDir}/lib/main/release/linux/stripped", include: '*.so'))
+  into toDir
 }
 
 jar {
   dependsOn ':jnilib:build'
-  def toDir = "/natives/${getArchitecture().getArchitectureId()}"
-
-  from("${project(':jnilib').buildDir}/lib/main/debug/linux") {
+  from("build/${getPlatformLibraryPath()}") {
     include '*.so'
-  } into toDir
+    into "/${getPlatformLibraryPath()}"
+  }
   manifest {
     attributes (
       'Main-Class': 'Sample1'
@@ -42,9 +46,22 @@ jar {
   }
 }
 
+jar.dependsOn copyNativeLibs
+
 test {
   dependsOn ':jnilib:build'
   systemProperty 'java.library.path', "${project(':jnilib').buildDir}/lib/main/debug/linux"
+  useTestNG()
+}
+
+run {
+  dependsOn ':jnilib:build'
+  systemProperty 'java.library.path', "${project(':jnilib').buildDir}/lib/main/debug/linux"
+}
+
+def getPlatformLibraryPath() {
+  def DELIM = '/';
+  "natives/${getArchitecture().getArchitectureId()}"
 }
 
 enum ProcessorEnum {
