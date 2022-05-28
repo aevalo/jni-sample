@@ -1,10 +1,11 @@
+package org.example.scala
+
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.BeforeAndAfterAll
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
 import org.scijava.nativelib.NativeLoader
 import java.io.IOException
-
 
 @RunWith(classOf[JUnitRunner])
 class Sample1Suite extends AnyFunSuite with BeforeAndAfterAll {

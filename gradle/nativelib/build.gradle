@@ -2,23 +2,20 @@ plugins {
   id 'cpp-library'
 }
 
-group = 'org.example.jnilib'
+group = 'org.example.nativelib'
 version = '0.1'
 
 library {
-  baseName = 'Sample1'
+  baseName = 'SampleNative'
   targetMachines = [
       machines.linux.x86_64,
       machines.windows.x86_64,
       machines.macOS.x86_64
   ]
   linkage = [Linkage.SHARED]
-  dependencies {
-    api project(':nativelib')
-  }
 }
 
-tasks.withType(CppCompile).configureEach {
+tasks.withType(CCompile).configureEach {
   compilerArgs.add '-fPIC'
   includes.from("${System.getenv('JAVA_HOME')}/include")
   includes.from("${System.getenv('JAVA_HOME')}/include/linux")
@@ -27,7 +24,7 @@ tasks.withType(CppCompile).configureEach {
     if (toolChain in [ Gcc, Clang ]) {
       return ['-O2', '-fno-access-control', '-std=c++14']
     } else if (toolChain in VisualCpp) {
-      return ['/Zi', '/std=c++14']
+      return ['/Zi', '/TC', '/std=c++14']
     }
     return []
   }

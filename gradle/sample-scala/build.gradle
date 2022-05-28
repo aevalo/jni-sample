@@ -21,180 +21,56 @@ dependencies {
   testRuntimeOnly 'org.scala-lang.modules:scala-xml_2.13:1.2.0'
 }
 
-application {
-  mainClass = 'Sample1'
-}
+group = 'org.example.scala'
+version = '0.1'
 
-task copyNativeLibs(type: Copy) {
-  dependsOn ':jnilib:build'
-  def toDir = "build/${getPlatformLibraryPath()}"
-  file(toDir).mkdirs()
-  from(fileTree(dir: "${project(':jnilib').buildDir}/lib/main/release/linux/stripped", include: '*.so'))
-  into toDir
+application {
+  mainClass = 'org.example.scala.Sample1'
 }
 
 jar {
-  dependsOn ':jnilib:build'
-  from("build/${getPlatformLibraryPath()}") {
-    include '*.so'
-    into "/${getPlatformLibraryPath()}"
+  dependsOn ':jnilib:linkReleaseLinux'
+  from(tasks.getByPath(':jnilib:linkReleaseLinux').outputs) {
+    duplicatesStrategy 'exclude'
+    into getPlatformLibraryPath()
   }
   manifest {
     attributes (
-      'Main-Class': 'Sample1'
+      'Main-Class': 'org.example.scala.Sample1'
     )
   }
 }
 
-jar.dependsOn copyNativeLibs
+distributions {
+  main {
+    startScripts {
+      defaultJvmOpts = ["-Djava.library.path=\$APP_HOME/${getPlatformLibraryPath()}"]
+    }
+    contents {
+      duplicatesStrategy 'exclude'
+      from(tasks.getByPath(':nativelib:linkReleaseLinux').outputs) {
+        into getPlatformLibraryPath()
+      }
+    }
+  }
+}
+
+task copyNativeLibs(type: Copy) {
+  dependsOn ':nativelib:linkDebugLinux'
+  dependsOn ':jnilib:linkDebugLinux'
+  duplicatesStrategy 'exclude'
+  from(tasks.getByPath(':nativelib:linkDebugLinux').outputs)
+  from(tasks.getByPath(':jnilib:linkDebugLinux').outputs)
+  into "build/${getPlatformLibraryPath()}"
+}
 
 test {
-  dependsOn ':jnilib:build'
-  systemProperty 'java.library.path', "${project(':jnilib').buildDir}/lib/main/debug/linux"
+  dependsOn copyNativeLibs
+  systemProperty 'java.library.path', "build/${getPlatformLibraryPath()}"
   useTestNG()
 }
 
 run {
-  dependsOn ':jnilib:build'
-  systemProperty 'java.library.path', "${project(':jnilib').buildDir}/lib/main/debug/linux"
+  dependsOn copyNativeLibs
+  systemProperty 'java.library.path', "build/${getPlatformLibraryPath()}"
 }
-
-def getPlatformLibraryPath() {
-  def DELIM = '/';
-  "natives/${getArchitecture().getArchitectureId()}"
-}
-
-enum ProcessorEnum {
-  UNKNOWN('unknown', 'Unknown processor'),
-  INTEL_32('intel_32', '32bit Intel'),
-  INTEL_64('intel_64', '64bit Intel'),
-  PPC('ppc', '32bit PowerPC'),
-  PPC_64('ppc_64', '64bit PowerPC'),
-  ARM('arm', 'ARM'),
-  AARCH_64('aarch64', '64bit ARM')
-  
-  private final String id
-  private final String desc
-  private static final Map map
-  
-  static {
-    map = [:] as TreeMap
-    values().each{ processor ->
-      map.put(processor.id, processor)
-    }
-  }
-  
-  private ProcessorEnum(String id, String desc) {
-    this.id = id;
-    this.desc = desc;
-  }
-  
-  static getProcessorEnum( id ) {
-    map[id]
-  }
-  
-  def getProcessorId() {
-    id
-  }
-}
-
-enum ArchitectureEnum {
-  UNKNOWN('unknown', 'Unknown architecture'),
-  LINUX_32('linux_32', '32bit Linux on Intel'),
-  LINUX_64('linux_64', '64bit Linux on Intel'),
-  LINUX_ARM('linux_arm', 'Linux on ARM'),
-  LINUX_ARM64('linux_arm64', 'Linux on ARM64'),
-  WINDOWS_32('windows_32', '32bit Windows on Intel'),
-  WINDOWS_64('windows_64', '64bit Windows on Intel'),
-  WINDOWS_ARM64('windows_arm64', 'Windows on ARM64'),
-  OSX_32('osx_32', '32bit MacOSX on Intel'),
-  OSX_64('osx_64', '64bit MacOSX on Intel'),
-  OSX_PPC('osx_ppc', '32bit MacOSX on PowerPC'),
-  OSX_ARM64('osx_arm64', 'MacOSX on ARM64'),
-  AIX_32('aix_32', '32bit AIX on Intel'),
-  AIX_64('aix_64', '64bit AIX on Intel')
-  
-  private final String id
-  private final String desc
-  private static final Map map
-  
-  static {
-    map = [:] as TreeMap
-    values().each{ arch ->
-      map.put(arch.id, arch)
-    }
-  }
-  
-  private ArchitectureEnum(String id, String desc) {
-    this.id = id;
-    this.desc = desc;
-  }
-  
-  static getArchitectureEnum( id ) {
-    map[id]
-  }
-  
-  def getArchitectureId() {
-    id
-  }
-}
-
-def getProcessor() {
-  def osArch = System.getProperty('os.arch').toLowerCase(Locale.ENGLISH)
-  def processor = ProcessorEnum.UNKNOWN
-  if (osArch.contains('arm')) {
-    processor = ProcessorEnum.ARM;
-  } else if (osArch.contains("aarch64")) {
-    processor = ProcessorEnum.AARCH_64;
-  } else if (osArch.contains("ppc")) {
-    processor = (osArch.contains("64")) ? ProcessorEnum.PPC_64 : ProcessorEnum.PPC;
-  } else if (osArch.contains("86") || osArch.contains("amd")) {
-    processor = (osArch.contains("64")) ? ProcessorEnum.INTEL_64 : ProcessorEnum.INTEL_32;
-  }
-  return processor;
-}
-
-def getArchitecture() {
-  def osName = System.getProperty('os.name').toLowerCase(Locale.ENGLISH)
-  def architecture = ArchitectureEnum.UNKNOWN
-  def processor = getProcessor()
-  if (processor != ProcessorEnum.UNKNOWN) {
-    if (osName.contains("nix") || osName.contains("nux")) {
-      if (ProcessorEnum.INTEL_32 == processor) {
-        architecture = ArchitectureEnum.LINUX_32;
-      } else if (ProcessorEnum.INTEL_64 == processor) {
-        architecture = ArchitectureEnum.LINUX_64;
-      } else if (ProcessorEnum.ARM == processor) {
-        architecture = ArchitectureEnum.LINUX_ARM;
-      } else if (ProcessorEnum.AARCH_64 == processor) {
-        architecture = ArchitectureEnum.LINUX_ARM64;
-      }
-    } else if (osName.contains("aix")) {
-      if (ProcessorEnum.PPC == processor) {
-        architecture = ArchitectureEnum.AIX_32;
-      } else if (ProcessorEnum.PPC_64 == processor) {
-        architecture = ArchitectureEnum.AIX_64;
-      }
-    } else if (osName.contains("win")) {
-      if (ProcessorEnum.INTEL_32 == processor) {
-        architecture = ArchitectureEnum.WINDOWS_32;
-      } else if (ProcessorEnum.INTEL_64 == processor) {
-        architecture = ArchitectureEnum.WINDOWS_64;
-      } else if (ProcessorEnum.AARCH_64 == processor) {
-        architecture = ArchitectureEnum.WINDOWS_ARM64;
-      }
-    } else if (osName.contains("mac")) {
-      if (ProcessorEnum.INTEL_32 == processor) {
-        architecture = ArchitectureEnum.OSX_32;
-      } else if (ProcessorEnum.INTEL_64 == processor) {
-        architecture = ArchitectureEnum.OSX_64;
-      } else if (ProcessorEnum.AARCH_64 == processor) {
-        architecture = ArchitectureEnum.OSX_ARM64;
-      } else if (ProcessorEnum.PPC == processor) {
-        architecture = ArchitectureEnum.OSX_PPC;
-      }
-    }
-  }
-  return architecture;
-}
-

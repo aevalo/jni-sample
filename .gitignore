@@ -19,3 +19,7 @@ gradle-app.setting
 
 # # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
 # gradle/wrapper/gradle-wrapper.properties
+
+# Distribution related folders
+gradle/sample-java/bin/
+gradle/sample-scala/bin/

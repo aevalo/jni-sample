@@ -1,10 +1,12 @@
+package org.example.java;
+
 import org.scijava.nativelib.NativeLoader;
 import java.io.IOException;
-
 
 public class Sample1 {
   static {
     try {
+      System.loadLibrary("SampleNative");
       NativeLoader.loadLibrary("Sample1");
     }
     catch(IOException exception ) {

@@ -1,3 +1,5 @@
+package org.example.scala
+
 import org.scijava.nativelib.NativeLoader
 import java.io.IOException
 
@@ -11,7 +13,8 @@ class Sample1 {
 
 object Sample1 {
   try {
-    NativeLoader.loadLibrary("Sample1");
+    System.loadLibrary("SampleNative")
+    NativeLoader.loadLibrary("Sample1")
   }
   catch {
     case exception: IOException => System.err.printf("Failed to load native library: %s%n", exception)
